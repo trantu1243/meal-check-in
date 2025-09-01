@@ -25,7 +25,9 @@ const defaultPeople = [
 ];
 
 let currentMeal = "lunch";
-let currentDate = new Date().toISOString().split("T")[0];
+let currentDate = new Date().toLocaleDateString("en-CA", {
+    timeZone: "Asia/Ho_Chi_Minh",
+});
 
 // Khởi tạo ứng dụng
 function initApp() {
@@ -40,7 +42,9 @@ function initApp() {
         localStorage.setItem("dinnerPrice", "35000");
     }
 
-    // Thiết lập ngày hiện tại
+    currentDate = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+    });
     document.getElementById("attendanceDate").value = currentDate;
 
     // Tự động chọn bữa ăn theo thời gian
@@ -62,17 +66,16 @@ function initApp() {
 
 function autoSelectMeal() {
     const now = new Date();
-    const hour = now.getHours();
+    const vietnamTime = new Date(
+        now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
+    );
+    const hour = vietnamTime.getHours();
 
     // 6h sáng đến 4h chiều = bữa trưa, còn lại = bữa tối
     if (hour >= 6 && hour < 16) {
         selectMeal("lunch");
-        // document.getElementById("autoMealInfo").textContent =
-        //     "🌅 Hiện tại là giờ bữa trưa";
     } else {
         selectMeal("dinner");
-        // document.getElementById("autoMealInfo").textContent =
-        //     "🌙 Hiện tại là giờ bữa tối";
     }
 }
 
@@ -189,8 +192,6 @@ function addPerson() {
     loadPeopleManager();
     loadAttendance();
     updateStatistics();
-
-
 }
 
 function loadPeopleManager() {
@@ -227,7 +228,9 @@ function deletePerson(index) {
 // Tạo options cho selector tháng
 function createMonthOptions() {
     const monthSelector = document.getElementById("monthSelector");
-    const currentDate = new Date();
+    const currentDate = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
+    );
 
     for (let i = 0; i < 12; i++) {
         const date = new Date(
@@ -367,7 +370,10 @@ function exportData() {
 
     const link = document.createElement("a");
     link.href = URL.createObjectURL(dataBlob);
-    link.download = `meal-data-${new Date().toISOString().split("T")[0]}.json`;
+    const vietnamDate = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+    });
+    link.download = `meal-data-${vietnamDate}.json`;
     link.click();
 }
 
