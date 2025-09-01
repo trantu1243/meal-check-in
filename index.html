@@ -1,139 +1,189 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quản Lý Bữa Ăn</title>
-    <link rel="stylesheet" href="styles.css">
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1 style="margin-bottom: 0;">Quản Lý Bữa Ăn</h1>
-            <div class="current-time" id="currentTime"></div>
-        </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('attendance')">
-                <span class="tab-icon">✓</span>
-                Chấm Bữa Ăn
-            </button>
-            <button class="nav-tab" onclick="switchTab('statistics')">
-                <span class="tab-icon">📊</span>
-                Thống Kê
-            </button>
-            <button class="nav-tab" onclick="switchTab('settings')">
-                <span class="tab-icon">⚙️</span>
-                Cài Đặt
-            </button>
-        </div>
-        <div id="attendance" class="tab-content active">
-            <div class="date-selector">
-                <input type="date" id="attendanceDate" onchange="loadAttendance()">
-                
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Quản Lý Bữa Ăn</title>
+        <link rel="stylesheet" href="styles.css" />
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1 style="margin-bottom: 0">Quản Lý Bữa Ăn</h1>
+                <div class="current-time" id="currentTime"></div>
             </div>
 
-            <div class="meal-selector">
-                <button class="meal-btn active" id="lunchBtn" onclick="selectMeal('lunch')">
-                    <span class="meal-icon">🌅</span>
-                    Bữa Trưa
+            <div class="nav-tabs">
+                <button
+                    class="nav-tab active"
+                    onclick="switchTab('attendance')"
+                >
+                    <span class="tab-icon">✓</span>
+                    Chấm Bữa Ăn
                 </button>
-                <button class="meal-btn" id="dinnerBtn" onclick="selectMeal('dinner')">
-                    <span class="meal-icon">🌙</span>
-                    Bữa Tối
+                <button class="nav-tab" onclick="switchTab('statistics')">
+                    <span class="tab-icon">📊</span>
+                    Thống Kê
+                </button>
+                <button class="nav-tab" onclick="switchTab('settings')">
+                    <span class="tab-icon">⚙️</span>
+                    Cài Đặt
                 </button>
             </div>
-
-            <div class="attendance-summary" id="attendanceSummary">
-                <div class="summary-item">
-                    <span class="summary-label">Có mặt:</span>
-                    <span class="summary-value" id="presentCount">0</span>
+            <div id="attendance" class="tab-content active">
+                <div class="date-selector">
+                    <input
+                        type="date"
+                        id="attendanceDate"
+                        onchange="loadAttendance()"
+                    />
                 </div>
-                <div class="summary-item">
-                    <span class="summary-label">Vắng mặt:</span>
-                    <span class="summary-value" id="absentCount">0</span>
+
+                <div class="meal-selector">
+                    <button
+                        class="meal-btn active"
+                        id="lunchBtn"
+                        onclick="selectMeal('lunch')"
+                    >
+                        <span class="meal-icon">🌅</span>
+                        Bữa Trưa
+                    </button>
+                    <button
+                        class="meal-btn"
+                        id="dinnerBtn"
+                        onclick="selectMeal('dinner')"
+                    >
+                        <span class="meal-icon">🌙</span>
+                        Bữa Tối
+                    </button>
+                </div>
+
+                <div class="attendance-summary" id="attendanceSummary">
+                    <div class="summary-item">
+                        <span class="summary-label">Có mặt:</span>
+                        <span class="summary-value" id="presentCount">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="summary-label">Vắng mặt:</span>
+                        <span class="summary-value" id="absentCount">0</span>
+                    </div>
+                </div>
+
+                <div class="person-list" id="personList"></div>
+            </div>
+            <div id="statistics" class="tab-content">
+                <div class="stats-card">
+                    <div class="stats-header">
+                        <h3 class="stats-title">Thống Kê Tháng</h3>
+                        <div class="stats-controls">
+                            <select
+                                class="month-selector"
+                                id="monthSelector"
+                                onchange="updateStatistics()"
+                            ></select>
+                            <button
+                                class="export-btn"
+                                onclick="exportMonthlyStats()"
+                            >
+                                Xuất Excel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalMeals">0</div>
+                            <div class="stat-label">Tổng Bữa Ăn</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalCost">0đ</div>
+                            <div class="stat-label">Tổng Tiền</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="avgDaily">0</div>
+                            <div class="stat-label">TB/Ngày</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalPeople">0</div>
+                            <div class="stat-label">Số Người</div>
+                        </div>
+                    </div>
+
+                    <div class="person-stats" id="personStats"></div>
+
+                    <div class="summary-total">
+                        <div>Tổng cộng tháng này</div>
+                        <div class="total-amount" id="monthlyTotal">0đ</div>
+                    </div>
                 </div>
             </div>
 
-            <div class="person-list" id="personList">
-                 Danh sách người sẽ được tạo bằng JavaScript 
+            <div id="settings" class="tab-content">
+                <div class="settings-section">
+                    <h3 class="settings-title">Giá Bữa Ăn</h3>
+                    <div class="price-group">
+                        <label for="lunchPrice">Giá bữa trưa (VNĐ)</label>
+                        <input
+                            type="number"
+                            class="price-input"
+                            id="lunchPrice"
+                            placeholder="25000"
+                        />
+                    </div>
+                    <div class="price-group">
+                        <label for="dinnerPrice">Giá bữa tối (VNĐ)</label>
+                        <input
+                            type="number"
+                            class="price-input"
+                            id="dinnerPrice"
+                            placeholder="30000"
+                        />
+                    </div>
+                    <button class="save-btn" onclick="savePrices()">
+                        Lưu Cài Đặt
+                    </button>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="settings-title">Quản Lý Danh Sách</h3>
+                    <div class="add-person-form">
+                        <input
+                            type="text"
+                            id="newPersonName"
+                            placeholder="Nhập tên người mới..."
+                            class="person-input"
+                        />
+                        <button class="add-btn" onclick="addPerson()">
+                            Thêm
+                        </button>
+                    </div>
+                    <div class="people-manager" id="peopleManager"></div>
+                </div>
+
+                <div class="settings-section">
+                    <h3 class="settings-title">Sao Lưu & Khôi Phục</h3>
+                    <div class="backup-controls">
+                        <button class="backup-btn" onclick="exportData()">
+                            Xuất Dữ Liệu
+                        </button>
+                        <input
+                            type="file"
+                            id="importFile"
+                            accept=".json"
+                            style="display: none"
+                            onchange="importData(event)"
+                        />
+                        <button
+                            class="backup-btn"
+                            onclick="document.getElementById('importFile').click()"
+                        >
+                            Nhập Dữ Liệu
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
-        <div id="statistics" class="tab-content">
-            <div class="stats-card">
-                <div class="stats-header">
-                    <h3 class="stats-title">Thống Kê Tháng</h3>
-                    <select class="month-selector" id="monthSelector" onchange="updateStatistics()">
-                         Options sẽ được tạo bằng JavaScript 
-                    </select>
-                </div>
-
-                <div class="stats-grid">
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalMeals">0</div>
-                        <div class="stat-label">Tổng Bữa Ăn</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalCost">0đ</div>
-                        <div class="stat-label">Tổng Chi Phí</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="avgDaily">0</div>
-                        <div class="stat-label">TB/Ngày</div>
-                    </div>
-                    <div class="stat-item">
-                        <div class="stat-value" id="totalPeople">0</div>
-                        <div class="stat-label">Số Người</div>
-                    </div>
-                </div>
-
-                <div class="person-stats" id="personStats">
-                     Thống kê từng người sẽ được tạo bằng JavaScript 
-                </div>
-
-                <div class="summary-total">
-                    <div>Tổng cộng tháng này</div>
-                    <div class="total-amount" id="monthlyTotal">0đ</div>
-                </div>
-            </div>
-        </div>
-
-        <div id="settings" class="tab-content">
-            <div class="settings-section">
-                <h3 class="settings-title">Giá Bữa Ăn</h3>
-                <div class="price-group">
-                    <label for="lunchPrice">Giá bữa trưa (VNĐ)</label>
-                    <input type="number" class="price-input" id="lunchPrice" placeholder="25000">
-                </div>
-                <div class="price-group">
-                    <label for="dinnerPrice">Giá bữa tối (VNĐ)</label>
-                    <input type="number" class="price-input" id="dinnerPrice" placeholder="30000">
-                </div>
-                <button class="save-btn" onclick="savePrices()">Lưu Cài Đặt</button>
-            </div>
-
-            <div class="settings-section">
-                <h3 class="settings-title">Quản Lý Danh Sách</h3>
-                <div class="add-person-form">
-                    <input type="text" id="newPersonName" placeholder="Nhập tên người mới..." class="person-input">
-                    <button class="add-btn" onclick="addPerson()">Thêm</button>
-                </div>
-                <div class="people-manager" id="peopleManager">
-                     Danh sách người để quản lý 
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <h3 class="settings-title">Sao Lưu & Khôi Phục</h3>
-                <div class="backup-controls">
-                    <button class="backup-btn" onclick="exportData()">Xuất Dữ Liệu</button>
-                    <input type="file" id="importFile" accept=".json" style="display: none;" onchange="importData(event)">
-                    <button class="backup-btn" onclick="document.getElementById('importFile').click()">Nhập Dữ Liệu</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
-</body>
+        <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+        <script src="script.js"></script>
+    </body>
 </html>

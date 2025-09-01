@@ -412,6 +412,157 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
+function exportMonthlyStats() {
+    const selectedMonth = document.getElementById("monthSelector").value;
+    const people = JSON.parse(localStorage.getItem("people"));
+    const lunchPrice = Number.parseInt(localStorage.getItem("lunchPrice"));
+    const dinnerPrice = Number.parseInt(localStorage.getItem("dinnerPrice"));
+
+    const [year, month] = selectedMonth.split("-");
+    const daysInMonth = new Date(year, month, 0).getDate();
+
+    // Tạo workbook mới
+    const wb = window.XLSX.utils.book_new();
+
+    // Tạo header cho bảng thống kê
+    const headers = ["STT", "Họ và Tên"];
+
+    // Thêm cột cho từng ngày trong tháng
+    for (let day = 1; day <= daysInMonth; day++) {
+        headers.push(day.toString());
+    }
+    headers.push("Tổng", "Thành Tiền");
+
+    // Khởi tạo dữ liệu
+    const data = [headers];
+
+    // Tính toán dữ liệu cho từng người
+    const personTotals = { meals: 0, cost: 0 };
+    const dayTotals = Array(daysInMonth).fill(0);
+
+    people.forEach((person, index) => {
+        const row = [index + 1, person];
+        let personMealTotal = 0;
+        let personCostTotal = 0;
+
+        // Duyệt qua từng ngày trong tháng
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
+
+            const lunchKey = `attendance_${dateStr}_lunch`;
+            const dinnerKey = `attendance_${dateStr}_dinner`;
+            const lunchAttendance = JSON.parse(
+                localStorage.getItem(lunchKey) || "{}"
+            );
+            const dinnerAttendance = JSON.parse(
+                localStorage.getItem(dinnerKey) || "{}"
+            );
+
+            let dayMeals = 0;
+            if (lunchAttendance[person]) {
+                dayMeals++;
+                personCostTotal += lunchPrice;
+            }
+            if (dinnerAttendance[person]) {
+                dayMeals++;
+                personCostTotal += dinnerPrice;
+            }
+
+            row.push(dayMeals);
+            personMealTotal += dayMeals;
+            dayTotals[day - 1] += dayMeals;
+        }
+
+        row.push(personMealTotal, personCostTotal);
+        data.push(row);
+
+        personTotals.meals += personMealTotal;
+        personTotals.cost += personCostTotal;
+    });
+
+    // Thêm hàng tổng cộng
+    const totalRow = ["", "TỔNG CỘNG"];
+    dayTotals.forEach((total) => totalRow.push(total));
+    totalRow.push(personTotals.meals, personTotals.cost);
+    data.push(totalRow);
+
+    // Tạo worksheet
+    const ws = window.XLSX.utils.aoa_to_sheet(data);
+
+    // Định dạng worksheet
+    const range = window.XLSX.utils.decode_range(ws["!ref"]);
+
+    // Định dạng header
+    for (let col = 0; col <= range.e.c; col++) {
+        const cellAddress = window.XLSX.utils.encode_cell({ r: 0, c: col });
+        if (ws[cellAddress]) {
+            ws[cellAddress].s = {
+                font: { bold: true },
+                fill: { fgColor: { rgb: "4F46E5" } },
+                font: { color: { rgb: "FFFFFF" }, bold: true },
+            };
+        }
+    }
+
+    // Định dạng cột tiền (cột cuối)
+    for (let row = 1; row <= range.e.r; row++) {
+        const cellAddress = window.XLSX.utils.encode_cell({
+            r: row,
+            c: range.e.c,
+        });
+        if (ws[cellAddress] && typeof ws[cellAddress].v === "number") {
+            ws[cellAddress].z = '#,##0" VNĐ"';
+        }
+    }
+
+    // Định dạng hàng tổng cộng
+    const totalRowIndex = range.e.r;
+    for (let col = 0; col <= range.e.c; col++) {
+        const cellAddress = window.XLSX.utils.encode_cell({
+            r: totalRowIndex,
+            c: col,
+        });
+        if (ws[cellAddress]) {
+            ws[cellAddress].s = {
+                font: { bold: true },
+                fill: { fgColor: { rgb: "F3F4F6" } },
+            };
+        }
+    }
+
+    // Thiết lập độ rộng cột
+    const colWidths = [
+        { wch: 5 }, // STT
+        { wch: 20 }, // Họ và Tên
+    ];
+
+    // Độ rộng cho các cột ngày
+    for (let i = 0; i < daysInMonth; i++) {
+        colWidths.push({ wch: 4 });
+    }
+
+    colWidths.push({ wch: 8 }); // Tổng
+    colWidths.push({ wch: 15 }); // Thành Tiền
+
+    ws["!cols"] = colWidths;
+
+    // Thêm worksheet vào workbook
+    const monthName = new Date(year, month - 1).toLocaleDateString("vi-VN", {
+        month: "long",
+        year: "numeric",
+    });
+    window.XLSX.utils.book_append_sheet(wb, ws, `Thống kê ${monthName}`);
+
+    // Xuất file
+    const vietnamDate = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+    });
+    window.XLSX.writeFile(
+        wb,
+        `thong-ke-thang-${month}-${year}-${vietnamDate}.xlsx`
+    );
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
 
