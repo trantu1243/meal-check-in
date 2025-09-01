@@ -516,7 +516,7 @@ body {
 .summary-total {
   background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   color: white;
-  padding: 1.5rem;
+  padding: 1rem;
   border-radius: 12px;
   text-align: center;
   margin-top: 1.5rem;
@@ -524,9 +524,8 @@ body {
 }
 
 .total-amount {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 800;
-  margin-top: 0.5rem;
 }
 
 @media (max-width: 480px) {
