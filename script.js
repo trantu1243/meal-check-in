@@ -34,10 +34,10 @@ function initApp() {
         localStorage.setItem("people", JSON.stringify(defaultPeople));
     }
     if (!localStorage.getItem("lunchPrice")) {
-        localStorage.setItem("lunchPrice", "25000");
+        localStorage.setItem("lunchPrice", "35000");
     }
     if (!localStorage.getItem("dinnerPrice")) {
-        localStorage.setItem("dinnerPrice", "30000");
+        localStorage.setItem("dinnerPrice", "35000");
     }
 
     // Thiết lập ngày hiện tại
