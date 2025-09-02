@@ -1,4 +1,3 @@
-// Dữ liệu mặc định
 const defaultPeople = [
     "Nguyễn Văn Điền",
     "Trần Văn Hoàng",
@@ -29,9 +28,7 @@ let currentDate = new Date().toLocaleDateString("en-CA", {
     timeZone: "Asia/Ho_Chi_Minh",
 });
 
-// Khởi tạo ứng dụng
 function initApp() {
-    // Khởi tạo dữ liệu nếu chưa có
     if (!localStorage.getItem("people")) {
         localStorage.setItem("people", JSON.stringify(defaultPeople));
     }
@@ -47,23 +44,18 @@ function initApp() {
     });
     document.getElementById("attendanceDate").value = currentDate;
 
-    // Tự động chọn bữa ăn theo thời gian
     autoSelectMeal();
 
-    // Cập nhật thời gian hiện tại
     updateCurrentTime();
     setInterval(updateCurrentTime, 1000);
 
-    // Tạo danh sách tháng
     createMonthOptions();
 
-    // Tải dữ liệu
     loadAttendance();
     loadSettings();
     loadPeopleManager();
     updateStatistics();
 
-    // Initialize daily and yearly statistics
     initDailyStats();
     initYearlyStats();
 }
@@ -75,7 +67,6 @@ function autoSelectMeal() {
     );
     const hour = vietnamTime.getHours();
 
-    // 6h sáng đến 4h chiều = bữa trưa, còn lại = bữa tối
     if (hour >= 6 && hour < 16) {
         selectMeal("lunch");
     } else {
@@ -97,9 +88,7 @@ function updateCurrentTime() {
     document.getElementById("currentTime").textContent = timeString;
 }
 
-// Chuyển đổi tab
 function switchTab(tabName) {
-    // Ẩn tất cả tab
     document.querySelectorAll(".tab-content").forEach((tab) => {
         tab.classList.remove("active");
     });
@@ -107,11 +96,9 @@ function switchTab(tabName) {
         btn.classList.remove("active");
     });
 
-    // Hiển thị tab được chọn
     document.getElementById(tabName).classList.add("active");
     event.target.classList.add("active");
 
-    // Cập nhật dữ liệu nếu cần
     if (tabName === "statistics") {
         updateStatistics();
     } else if (tabName === "settings") {
@@ -119,7 +106,6 @@ function switchTab(tabName) {
     }
 }
 
-// Chọn bữa ăn
 function selectMeal(meal) {
     currentMeal = meal;
     document.querySelectorAll(".meal-btn").forEach((btn) => {
@@ -158,12 +144,10 @@ function loadAttendance() {
         personList.appendChild(personItem);
     });
 
-    // Cập nhật thống kê tóm tắt
     document.getElementById("presentCount").textContent = presentCount;
     document.getElementById("absentCount").textContent = absentCount;
 }
 
-// Chuyển đổi trạng thái có mặt
 function toggleAttendance(person) {
     const attendanceKey = `attendance_${currentDate}_${currentMeal}`;
     const attendance = JSON.parse(localStorage.getItem(attendanceKey) || "{}");
@@ -229,7 +213,6 @@ function deletePerson(index) {
     }
 }
 
-// Tạo options cho selector tháng
 function createMonthOptions() {
     const monthSelector = document.getElementById("monthSelector");
     const currentDate = new Date(
@@ -262,25 +245,21 @@ function updateStatistics() {
     let totalCost = 0;
     const personStats = {};
 
-    // Khởi tạo stats cho từng người
     people.forEach((person) => {
         personStats[person] = { lunch: 0, dinner: 0, cost: 0 };
     });
 
-    // Duyệt qua tất cả các ngày trong tháng
     const [year, month] = selectedMonth.split("-");
     const daysInMonth = new Date(year, month, 0).getDate();
 
     for (let day = 1; day <= daysInMonth; day++) {
         const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
 
-        // Kiểm tra bữa trưa
         const lunchKey = `attendance_${dateStr}_lunch`;
         const lunchAttendance = JSON.parse(
             localStorage.getItem(lunchKey) || "{}"
         );
 
-        // Kiểm tra bữa tối
         const dinnerKey = `attendance_${dateStr}_dinner`;
         const dinnerAttendance = JSON.parse(
             localStorage.getItem(dinnerKey) || "{}"
@@ -302,7 +281,6 @@ function updateStatistics() {
         });
     }
 
-    // Cập nhật UI
     document.getElementById("totalMeals").textContent = totalMeals;
     document.getElementById("totalCost").textContent =
         formatCurrency(totalCost);
@@ -313,7 +291,6 @@ function updateStatistics() {
     document.getElementById("monthlyTotal").textContent =
         formatCurrency(totalCost);
 
-    // Cập nhật thống kê từng người
     const personStatsContainer = document.getElementById("personStats");
     personStatsContainer.innerHTML = "";
 
@@ -334,7 +311,6 @@ function updateStatistics() {
     });
 }
 
-// Tải cài đặt
 function loadSettings() {
     document.getElementById("lunchPrice").value =
         localStorage.getItem("lunchPrice");
@@ -342,7 +318,6 @@ function loadSettings() {
         localStorage.getItem("dinnerPrice");
 }
 
-// Lưu giá bữa ăn
 function savePrices() {
     const lunchPrice = document.getElementById("lunchPrice").value;
     const dinnerPrice = document.getElementById("dinnerPrice").value;
@@ -362,7 +337,6 @@ function exportData() {
         attendance: {},
     };
 
-    // Xuất tất cả dữ liệu chấm công
     for (const key in localStorage) {
         if (key.startsWith("attendance_")) {
             data.attendance[key] = localStorage.getItem(key);
@@ -390,17 +364,14 @@ function importData(event) {
         try {
             const data = JSON.parse(e.target.result);
 
-            // Khôi phục dữ liệu
             localStorage.setItem("people", JSON.stringify(data.people));
             localStorage.setItem("lunchPrice", data.lunchPrice);
             localStorage.setItem("dinnerPrice", data.dinnerPrice);
 
-            // Khôi phục dữ liệu chấm công
             for (const key in data.attendance) {
                 localStorage.setItem(key, data.attendance[key]);
             }
 
-            // Tải lại giao diện
             loadAttendance();
             loadSettings();
             loadPeopleManager();
@@ -414,7 +385,6 @@ function importData(event) {
     reader.readAsText(file);
 }
 
-// Format tiền tệ
 function formatCurrency(amount) {
     return new Intl.NumberFormat("vi-VN", {
         style: "currency",
@@ -422,9 +392,7 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-// Switch stats type
 function switchStatsType(type) {
-    // Remove active class from all buttons and sections
     document.querySelectorAll(".stats-type-btn").forEach((btn) => {
         btn.classList.remove("active");
     });
@@ -432,11 +400,9 @@ function switchStatsType(type) {
         section.classList.remove("active");
     });
 
-    // Add active class to selected button and section
     event.target.classList.add("active");
     document.getElementById(type + "Stats").classList.add("active");
 
-    // Initialize data for the selected type
     if (type === "daily") {
         initDailyStats();
     } else if (type === "yearly") {
@@ -490,16 +456,13 @@ function updateDailyStatistics() {
     let dinnerCount = 0;
     const personStats = {};
 
-    // Initialize stats for each person
     people.forEach((person) => {
         personStats[person] = { lunch: 0, dinner: 0, cost: 0 };
     });
 
-    // Check lunch attendance
     const lunchKey = `attendance_${selectedDate}_lunch`;
     const lunchAttendance = JSON.parse(localStorage.getItem(lunchKey) || "{}");
 
-    // Check dinner attendance
     const dinnerKey = `attendance_${selectedDate}_dinner`;
     const dinnerAttendance = JSON.parse(
         localStorage.getItem(dinnerKey) || "{}"
@@ -522,7 +485,6 @@ function updateDailyStatistics() {
         }
     });
 
-    // Update UI
     document.getElementById("dailyTotalMeals").textContent = totalMeals;
     document.getElementById("dailyTotalCost").textContent =
         formatCurrency(totalCost);
@@ -531,7 +493,6 @@ function updateDailyStatistics() {
     document.getElementById("dailyTotal").textContent =
         formatCurrency(totalCost);
 
-    // Update person stats
     const dailyPersonStatsContainer =
         document.getElementById("dailyPersonStats");
     dailyPersonStatsContainer.innerHTML = "";
@@ -563,17 +524,14 @@ function updateYearlyStatistics() {
     let totalCost = 0;
     const personStats = {};
 
-    // Initialize stats for each person
     people.forEach((person) => {
         personStats[person] = { months: Array(12).fill(0), cost: 0 };
     });
 
-    // Loop through all months in the year
     for (let month = 1; month <= 12; month++) {
         const monthStr = String(month).padStart(2, "0");
         const daysInMonth = new Date(selectedYear, month, 0).getDate();
 
-        // Loop through all days in the month
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${selectedYear}-${monthStr}-${String(day).padStart(
                 2,
@@ -606,7 +564,6 @@ function updateYearlyStatistics() {
         }
     }
 
-    // Update UI
     document.getElementById("yearlyTotalMeals").textContent = totalMeals;
     document.getElementById("yearlyTotalCost").textContent =
         formatCurrency(totalCost);
@@ -617,7 +574,6 @@ function updateYearlyStatistics() {
     document.getElementById("yearlyTotal").textContent =
         formatCurrency(totalCost);
 
-    // Update person stats
     const yearlyPersonStatsContainer =
         document.getElementById("yearlyPersonStats");
     yearlyPersonStatsContainer.innerHTML = "";
@@ -649,7 +605,6 @@ function exportDailyStats() {
 
     const wb = window.XLSX.utils.book_new();
 
-    // Create header
     const headers = [
         "STT",
         "Họ và Tên",
@@ -664,7 +619,6 @@ function exportDailyStats() {
         headers,
     ];
 
-    // Get attendance data
     const lunchKey = `attendance_${selectedDate}_lunch`;
     const dinnerKey = `attendance_${selectedDate}_dinner`;
     const lunchAttendance = JSON.parse(localStorage.getItem(lunchKey) || "{}");
@@ -691,7 +645,6 @@ function exportDailyStats() {
         totalCost += personCost;
     });
 
-    // Add total row
     data.push([
         "",
         "TỔNG CỘNG",
@@ -703,20 +656,17 @@ function exportDailyStats() {
 
     const ws = window.XLSX.utils.aoa_to_sheet(data);
 
-    // Format worksheet
     const range = window.XLSX.utils.decode_range(ws["!ref"]);
 
-    // Merge title cell
     ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
 
-    // Set column widths
     ws["!cols"] = [
-        { wch: 5 }, // STT
-        { wch: 20 }, // Họ và Tên
-        { wch: 12 }, // Bữa Trưa
-        { wch: 12 }, // Bữa Tối
-        { wch: 8 }, // Tổng
-        { wch: 15 }, // Thành Tiền
+        { wch: 5 },
+        { wch: 20 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 8 },
+        { wch: 15 },
     ];
 
     window.XLSX.utils.book_append_sheet(wb, ws, "Thống kê ngày");
@@ -738,7 +688,6 @@ function exportYearlyStats() {
 
     const wb = window.XLSX.utils.book_new();
 
-    // Create header
     const headers = ["STT", "Họ và Tên"];
     for (let month = 1; month <= 12; month++) {
         headers.push(`Tháng ${month}`);
@@ -752,7 +701,6 @@ function exportYearlyStats() {
         personStats[person] = { months: Array(12).fill(0), cost: 0 };
     });
 
-    // Calculate data for each month
     for (let month = 1; month <= 12; month++) {
         const monthStr = String(month).padStart(2, "0");
         const daysInMonth = new Date(selectedYear, month, 0).getDate();
@@ -785,7 +733,6 @@ function exportYearlyStats() {
         }
     }
 
-    // Add person data
     const monthTotals = Array(12).fill(0);
     let totalMeals = 0,
         totalCost = 0;
@@ -809,25 +756,19 @@ function exportYearlyStats() {
         totalCost += stats.cost;
     });
 
-    // Add total row
     const totalRow = ["", "TỔNG CỘNG", ...monthTotals, totalMeals, totalCost];
     data.push(totalRow);
 
     const ws = window.XLSX.utils.aoa_to_sheet(data);
 
-    // Format worksheet
     ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 13 } }];
 
-    // Set column widths
-    const colWidths = [
-        { wch: 5 }, // STT
-        { wch: 20 }, // Họ và Tên
-    ];
+    const colWidths = [{ wch: 5 }, { wch: 20 }];
     for (let i = 0; i < 12; i++) {
-        colWidths.push({ wch: 8 }); // Months
+        colWidths.push({ wch: 8 });
     }
-    colWidths.push({ wch: 8 }); // Tổng
-    colWidths.push({ wch: 15 }); // Thành Tiền
+    colWidths.push({ wch: 8 });
+    colWidths.push({ wch: 15 });
 
     ws["!cols"] = colWidths;
 
@@ -845,7 +786,6 @@ function exportYearlyStats() {
 document.addEventListener("DOMContentLoaded", () => {
     initApp();
 
-    // Xử lý phím Enter cho form thêm người
     document
         .getElementById("newPersonName")
         .addEventListener("keypress", (e) => {
