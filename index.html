@@ -74,7 +74,78 @@
             <div id="statistics" class="tab-content">
                 <div class="stats-card">
                     <div class="stats-header">
-                        <h3 class="stats-title">Thống Kê Tháng</h3>
+                        <h3 class="stats-title">Thống Kê</h3>
+                        <div class="stats-type-selector">
+                            <button
+                                class="stats-type-btn active"
+                                onclick="switchStatsType('daily')"
+                            >
+                                Theo Ngày
+                            </button>
+                            <button
+                                class="stats-type-btn"
+                                onclick="switchStatsType('monthly')"
+                            >
+                                Theo Tháng
+                            </button>
+                            <button
+                                class="stats-type-btn"
+                                onclick="switchStatsType('yearly')"
+                            >
+                                Theo Năm
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="dailyStats" class="stats-section active">
+                        <div class="stats-controls">
+                            <input
+                                type="date"
+                                class="day-selector"
+                                id="dailyDateSelector"
+                                onchange="updateDailyStatistics()"
+                            />
+                            <button
+                                class="export-btn"
+                                onclick="exportDailyStats()"
+                            >
+                                Xuất Excel
+                            </button>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="dailyTotalMeals">
+                                    0
+                                </div>
+                                <div class="stat-label">Tổng Bữa Ăn</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="dailyTotalCost">
+                                    0đ
+                                </div>
+                                <div class="stat-label">Tổng Tiền</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="dailyLunchCount">
+                                    0
+                                </div>
+                                <div class="stat-label">Bữa Trưa</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="dailyDinnerCount">
+                                    0
+                                </div>
+                                <div class="stat-label">Bữa Tối</div>
+                            </div>
+                        </div>
+                        <div class="person-stats" id="dailyPersonStats"></div>
+                        <div class="summary-total">
+                            <div>Tổng cộng ngày này</div>
+                            <div class="total-amount" id="dailyTotal">0đ</div>
+                        </div>
+                    </div>
+
+                    <div id="monthlyStats" class="stats-section">
                         <div class="stats-controls">
                             <select
                                 class="month-selector"
@@ -88,32 +159,76 @@
                                 Xuất Excel
                             </button>
                         </div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalMeals">0</div>
+                                <div class="stat-label">Tổng Bữa Ăn</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalCost">0đ</div>
+                                <div class="stat-label">Tổng Tiền</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="avgDaily">0</div>
+                                <div class="stat-label">TB/Ngày</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="totalPeople">0</div>
+                                <div class="stat-label">Số Người</div>
+                            </div>
+                        </div>
+                        <div class="person-stats" id="personStats"></div>
+                        <div class="summary-total">
+                            <div>Tổng cộng tháng này</div>
+                            <div class="total-amount" id="monthlyTotal">0đ</div>
+                        </div>
                     </div>
 
-                    <div class="stats-grid">
-                        <div class="stat-item">
-                            <div class="stat-value" id="totalMeals">0</div>
-                            <div class="stat-label">Tổng Bữa Ăn</div>
+                    <div id="yearlyStats" class="stats-section">
+                        <div class="stats-controls">
+                            <select
+                                class="year-selector"
+                                id="yearSelector"
+                                onchange="updateYearlyStatistics()"
+                            ></select>
+                            <button
+                                class="export-btn"
+                                onclick="exportYearlyStats()"
+                            >
+                                Xuất Excel
+                            </button>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="totalCost">0đ</div>
-                            <div class="stat-label">Tổng Tiền</div>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearlyTotalMeals">
+                                    0
+                                </div>
+                                <div class="stat-label">Tổng Bữa Ăn</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearlyTotalCost">
+                                    0đ
+                                </div>
+                                <div class="stat-label">Tổng Tiền</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearlyAvgMonthly">
+                                    0
+                                </div>
+                                <div class="stat-label">TB/Tháng</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value" id="yearlyTotalPeople">
+                                    0
+                                </div>
+                                <div class="stat-label">Số Người</div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="avgDaily">0</div>
-                            <div class="stat-label">TB/Ngày</div>
+                        <div class="person-stats" id="yearlyPersonStats"></div>
+                        <div class="summary-total">
+                            <div>Tổng cộng năm này</div>
+                            <div class="total-amount" id="yearlyTotal">0đ</div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value" id="totalPeople">0</div>
-                            <div class="stat-label">Số Người</div>
-                        </div>
-                    </div>
-
-                    <div class="person-stats" id="personStats"></div>
-
-                    <div class="summary-total">
-                        <div>Tổng cộng tháng này</div>
-                        <div class="total-amount" id="monthlyTotal">0đ</div>
                     </div>
                 </div>
             </div>

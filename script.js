@@ -1,27 +1,27 @@
 // Dữ liệu mặc định
 const defaultPeople = [
-    "Nguễyn Văn Điền",
-    "Trần Văn Hoàng",
-    "Nguyễn Thế Quân",
-    "Nguyễn Trọng Đại",
-    "Nguyễn Công Đức",
-    "Phạm Quang Trung",
-    "Nguyễn Văn Cần",
-    "Võ Duy Cầu",
-    "Nguyễn Văn Linh",
-    "Nguyễn Đức Việt",
-    "Trần Văn Khương",
-    "Thái Thăng Long",
-    "Trần Văn Hải",
-    "Nguyễn Hà Anh",
+    "Nguyễn Văn Điền",
+    "Trần Văn Hoàng",
+    "Nguyễn Thế Quân",
+    "Nguyễn Trọng Đại",
+    "Nguyễn Công Đức",
+    "Phạm Quang Trung",
+    "Nguyễn Văn Cần",
+    "Võ Duy Cầu",
+    "Nguyễn Văn Linh",
+    "Nguyễn Đức Việt",
+    "Trần Văn Khương",
+    "Thái Thăng Long",
+    "Trần Văn Hải",
+    "Nguyễn Hà Anh",
     "Lê Minh Vương",
-    "Nguyễn Trọng Nhàn",
-    "Nguyễn Văn Huy",
-    "Trịnh Xuân Trường",
-    "Tăng Xuân Thắng",
-    "Nguyễn Anh Tuấn",
-    "Đoàn Văn Kỳ",
-    "Nguyễn Công Phúc",
+    "Nguyễn Trọng Nhàn",
+    "Nguyễn Văn Huy",
+    "Trịnh Xuân Trường",
+    "Tăng Xuân Thắng",
+    "Nguyễn Anh Tuấn",
+    "Đoàn Văn Kỳ",
+    "Nguyễn Công Phúc",
 ];
 
 let currentMeal = "lunch";
@@ -62,6 +62,10 @@ function initApp() {
     loadSettings();
     loadPeopleManager();
     updateStatistics();
+
+    // Initialize daily and yearly statistics
+    initDailyStats();
+    initYearlyStats();
 }
 
 function autoSelectMeal() {
@@ -418,42 +422,163 @@ function formatCurrency(amount) {
     }).format(amount);
 }
 
-function exportMonthlyStats() {
-    const selectedMonth = document.getElementById("monthSelector").value;
+// Switch stats type
+function switchStatsType(type) {
+    // Remove active class from all buttons and sections
+    document.querySelectorAll(".stats-type-btn").forEach((btn) => {
+        btn.classList.remove("active");
+    });
+    document.querySelectorAll(".stats-section").forEach((section) => {
+        section.classList.remove("active");
+    });
+
+    // Add active class to selected button and section
+    event.target.classList.add("active");
+    document.getElementById(type + "Stats").classList.add("active");
+
+    // Initialize data for the selected type
+    if (type === "daily") {
+        initDailyStats();
+    } else if (type === "yearly") {
+        initYearlyStats();
+    }
+}
+
+function initDailyStats() {
+    const dailyDateSelector = document.getElementById("dailyDateSelector");
+    if (!dailyDateSelector.value) {
+        dailyDateSelector.value = new Date().toLocaleDateString("en-CA", {
+            timeZone: "Asia/Ho_Chi_Minh",
+        });
+    }
+    updateDailyStatistics();
+}
+
+function initYearlyStats() {
+    const yearSelector = document.getElementById("yearSelector");
+    if (yearSelector.children.length === 0) {
+        createYearOptions();
+    }
+    updateYearlyStatistics();
+}
+
+function createYearOptions() {
+    const yearSelector = document.getElementById("yearSelector");
+    const currentYear = new Date(
+        new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
+    ).getFullYear();
+
+    for (let i = 0; i < 5; i++) {
+        const year = currentYear - i;
+        const option = document.createElement("option");
+        option.value = year.toString();
+        option.textContent = year.toString();
+        if (i === 0) option.selected = true;
+        yearSelector.appendChild(option);
+    }
+}
+
+function updateDailyStatistics() {
+    const selectedDate = document.getElementById("dailyDateSelector").value;
     const people = JSON.parse(localStorage.getItem("people"));
     const lunchPrice = Number.parseInt(localStorage.getItem("lunchPrice"));
     const dinnerPrice = Number.parseInt(localStorage.getItem("dinnerPrice"));
 
-    const [year, month] = selectedMonth.split("-");
-    const daysInMonth = new Date(year, month, 0).getDate();
+    let totalMeals = 0;
+    let totalCost = 0;
+    let lunchCount = 0;
+    let dinnerCount = 0;
+    const personStats = {};
 
-    // Tạo workbook mới
-    const wb = window.XLSX.utils.book_new();
+    // Initialize stats for each person
+    people.forEach((person) => {
+        personStats[person] = { lunch: 0, dinner: 0, cost: 0 };
+    });
 
-    // Tạo header cho bảng thống kê
-    const headers = ["STT", "Họ và Tên"];
+    // Check lunch attendance
+    const lunchKey = `attendance_${selectedDate}_lunch`;
+    const lunchAttendance = JSON.parse(localStorage.getItem(lunchKey) || "{}");
 
-    // Thêm cột cho từng ngày trong tháng
-    for (let day = 1; day <= daysInMonth; day++) {
-        headers.push(day.toString());
-    }
-    headers.push("Tổng", "Thành Tiền");
+    // Check dinner attendance
+    const dinnerKey = `attendance_${selectedDate}_dinner`;
+    const dinnerAttendance = JSON.parse(
+        localStorage.getItem(dinnerKey) || "{}"
+    );
 
-    // Khởi tạo dữ liệu
-    const data = [headers];
+    people.forEach((person) => {
+        if (lunchAttendance[person]) {
+            personStats[person].lunch = 1;
+            personStats[person].cost += lunchPrice;
+            totalMeals++;
+            totalCost += lunchPrice;
+            lunchCount++;
+        }
+        if (dinnerAttendance[person]) {
+            personStats[person].dinner = 1;
+            personStats[person].cost += dinnerPrice;
+            totalMeals++;
+            totalCost += dinnerPrice;
+            dinnerCount++;
+        }
+    });
 
-    // Tính toán dữ liệu cho từng người
-    const personTotals = { meals: 0, cost: 0 };
-    const dayTotals = Array(daysInMonth).fill(0);
+    // Update UI
+    document.getElementById("dailyTotalMeals").textContent = totalMeals;
+    document.getElementById("dailyTotalCost").textContent =
+        formatCurrency(totalCost);
+    document.getElementById("dailyLunchCount").textContent = lunchCount;
+    document.getElementById("dailyDinnerCount").textContent = dinnerCount;
+    document.getElementById("dailyTotal").textContent =
+        formatCurrency(totalCost);
 
-    people.forEach((person, index) => {
-        const row = [index + 1, person];
-        let personMealTotal = 0;
-        let personCostTotal = 0;
+    // Update person stats
+    const dailyPersonStatsContainer =
+        document.getElementById("dailyPersonStats");
+    dailyPersonStatsContainer.innerHTML = "";
 
-        // Duyệt qua từng ngày trong tháng
+    people.forEach((person) => {
+        const stats = personStats[person];
+        const personDiv = document.createElement("div");
+        personDiv.className = "person-stat";
+        personDiv.innerHTML = `
+            <div>
+                <div class="person-name">${person}</div>
+                <div class="person-meals">Trưa: ${stats.lunch} | Tối: ${
+            stats.dinner
+        }</div>
+            </div>
+            <div class="person-cost">${formatCurrency(stats.cost)}</div>
+        `;
+        dailyPersonStatsContainer.appendChild(personDiv);
+    });
+}
+
+function updateYearlyStatistics() {
+    const selectedYear = document.getElementById("yearSelector").value;
+    const people = JSON.parse(localStorage.getItem("people"));
+    const lunchPrice = Number.parseInt(localStorage.getItem("lunchPrice"));
+    const dinnerPrice = Number.parseInt(localStorage.getItem("dinnerPrice"));
+
+    let totalMeals = 0;
+    let totalCost = 0;
+    const personStats = {};
+
+    // Initialize stats for each person
+    people.forEach((person) => {
+        personStats[person] = { months: Array(12).fill(0), cost: 0 };
+    });
+
+    // Loop through all months in the year
+    for (let month = 1; month <= 12; month++) {
+        const monthStr = String(month).padStart(2, "0");
+        const daysInMonth = new Date(selectedYear, month, 0).getDate();
+
+        // Loop through all days in the month
         for (let day = 1; day <= daysInMonth; day++) {
-            const dateStr = `${year}-${month}-${String(day).padStart(2, "0")}`;
+            const dateStr = `${selectedYear}-${monthStr}-${String(day).padStart(
+                2,
+                "0"
+            )}`;
 
             const lunchKey = `attendance_${dateStr}_lunch`;
             const dinnerKey = `attendance_${dateStr}_dinner`;
@@ -464,108 +589,256 @@ function exportMonthlyStats() {
                 localStorage.getItem(dinnerKey) || "{}"
             );
 
-            let dayMeals = 0;
-            if (lunchAttendance[person]) {
-                dayMeals++;
-                personCostTotal += lunchPrice;
-            }
-            if (dinnerAttendance[person]) {
-                dayMeals++;
-                personCostTotal += dinnerPrice;
-            }
-
-            row.push(dayMeals);
-            personMealTotal += dayMeals;
-            dayTotals[day - 1] += dayMeals;
+            people.forEach((person) => {
+                if (lunchAttendance[person]) {
+                    personStats[person].months[month - 1]++;
+                    personStats[person].cost += lunchPrice;
+                    totalMeals++;
+                    totalCost += lunchPrice;
+                }
+                if (dinnerAttendance[person]) {
+                    personStats[person].months[month - 1]++;
+                    personStats[person].cost += dinnerPrice;
+                    totalMeals++;
+                    totalCost += dinnerPrice;
+                }
+            });
         }
+    }
 
-        row.push(personMealTotal, personCostTotal);
-        data.push(row);
+    // Update UI
+    document.getElementById("yearlyTotalMeals").textContent = totalMeals;
+    document.getElementById("yearlyTotalCost").textContent =
+        formatCurrency(totalCost);
+    document.getElementById("yearlyAvgMonthly").textContent = Math.round(
+        totalMeals / 12
+    );
+    document.getElementById("yearlyTotalPeople").textContent = people.length;
+    document.getElementById("yearlyTotal").textContent =
+        formatCurrency(totalCost);
 
-        personTotals.meals += personMealTotal;
-        personTotals.cost += personCostTotal;
+    // Update person stats
+    const yearlyPersonStatsContainer =
+        document.getElementById("yearlyPersonStats");
+    yearlyPersonStatsContainer.innerHTML = "";
+
+    people.forEach((person) => {
+        const stats = personStats[person];
+        const totalPersonMeals = stats.months.reduce(
+            (sum, meals) => sum + meals,
+            0
+        );
+        const personDiv = document.createElement("div");
+        personDiv.className = "person-stat";
+        personDiv.innerHTML = `
+            <div>
+                <div class="person-name">${person}</div>
+                <div class="person-meals">Tổng: ${totalPersonMeals} bữa</div>
+            </div>
+            <div class="person-cost">${formatCurrency(stats.cost)}</div>
+        `;
+        yearlyPersonStatsContainer.appendChild(personDiv);
     });
+}
 
-    // Thêm hàng tổng cộng
-    const totalRow = ["", "TỔNG CỘNG"];
-    dayTotals.forEach((total) => totalRow.push(total));
-    totalRow.push(personTotals.meals, personTotals.cost);
-    data.push(totalRow);
+function exportDailyStats() {
+    const selectedDate = document.getElementById("dailyDateSelector").value;
+    const people = JSON.parse(localStorage.getItem("people"));
+    const lunchPrice = Number.parseInt(localStorage.getItem("lunchPrice"));
+    const dinnerPrice = Number.parseInt(localStorage.getItem("dinnerPrice"));
 
-    // Tạo worksheet
-    const ws = window.XLSX.utils.aoa_to_sheet(data);
+    const wb = window.XLSX.utils.book_new();
 
-    // Định dạng worksheet
-    const range = window.XLSX.utils.decode_range(ws["!ref"]);
-
-    // Định dạng header
-    for (let col = 0; col <= range.e.c; col++) {
-        const cellAddress = window.XLSX.utils.encode_cell({ r: 0, c: col });
-        if (ws[cellAddress]) {
-            ws[cellAddress].s = {
-                font: { bold: true },
-                fill: { fgColor: { rgb: "4F46E5" } },
-                font: { color: { rgb: "FFFFFF" }, bold: true },
-            };
-        }
-    }
-
-    // Định dạng cột tiền (cột cuối)
-    for (let row = 1; row <= range.e.r; row++) {
-        const cellAddress = window.XLSX.utils.encode_cell({
-            r: row,
-            c: range.e.c,
-        });
-        if (ws[cellAddress] && typeof ws[cellAddress].v === "number") {
-            ws[cellAddress].z = '#,##0" VNĐ"';
-        }
-    }
-
-    // Định dạng hàng tổng cộng
-    const totalRowIndex = range.e.r;
-    for (let col = 0; col <= range.e.c; col++) {
-        const cellAddress = window.XLSX.utils.encode_cell({
-            r: totalRowIndex,
-            c: col,
-        });
-        if (ws[cellAddress]) {
-            ws[cellAddress].s = {
-                font: { bold: true },
-                fill: { fgColor: { rgb: "F3F4F6" } },
-            };
-        }
-    }
-
-    // Thiết lập độ rộng cột
-    const colWidths = [
-        { wch: 5 }, // STT
-        { wch: 20 }, // Họ và Tên
+    // Create header
+    const headers = [
+        "STT",
+        "Họ và Tên",
+        "Bữa Trưa",
+        "Bữa Tối",
+        "Tổng",
+        "Thành Tiền",
+    ];
+    const data = [
+        [`Chấm cơm ngày ${new Date(selectedDate).toLocaleDateString("vi-VN")}`],
+        [],
+        headers,
     ];
 
-    // Độ rộng cho các cột ngày
-    for (let i = 0; i < daysInMonth; i++) {
-        colWidths.push({ wch: 4 });
-    }
+    // Get attendance data
+    const lunchKey = `attendance_${selectedDate}_lunch`;
+    const dinnerKey = `attendance_${selectedDate}_dinner`;
+    const lunchAttendance = JSON.parse(localStorage.getItem(lunchKey) || "{}");
+    const dinnerAttendance = JSON.parse(
+        localStorage.getItem(dinnerKey) || "{}"
+    );
 
-    colWidths.push({ wch: 8 }); // Tổng
-    colWidths.push({ wch: 15 }); // Thành Tiền
+    let totalLunch = 0,
+        totalDinner = 0,
+        totalMeals = 0,
+        totalCost = 0;
 
-    ws["!cols"] = colWidths;
+    people.forEach((person, index) => {
+        const lunch = lunchAttendance[person] ? 1 : 0;
+        const dinner = dinnerAttendance[person] ? 1 : 0;
+        const personTotal = lunch + dinner;
+        const personCost = lunch * lunchPrice + dinner * dinnerPrice;
 
-    // Thêm worksheet vào workbook
-    const monthName = new Date(year, month - 1).toLocaleDateString("vi-VN", {
-        month: "long",
-        year: "numeric",
+        data.push([index + 1, person, lunch, dinner, personTotal, personCost]);
+
+        totalLunch += lunch;
+        totalDinner += dinner;
+        totalMeals += personTotal;
+        totalCost += personCost;
     });
-    window.XLSX.utils.book_append_sheet(wb, ws, `Thống kê ${monthName}`);
 
-    // Xuất file
+    // Add total row
+    data.push([
+        "",
+        "TỔNG CỘNG",
+        totalLunch,
+        totalDinner,
+        totalMeals,
+        totalCost,
+    ]);
+
+    const ws = window.XLSX.utils.aoa_to_sheet(data);
+
+    // Format worksheet
+    const range = window.XLSX.utils.decode_range(ws["!ref"]);
+
+    // Merge title cell
+    ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }];
+
+    // Set column widths
+    ws["!cols"] = [
+        { wch: 5 }, // STT
+        { wch: 20 }, // Họ và Tên
+        { wch: 12 }, // Bữa Trưa
+        { wch: 12 }, // Bữa Tối
+        { wch: 8 }, // Tổng
+        { wch: 15 }, // Thành Tiền
+    ];
+
+    window.XLSX.utils.book_append_sheet(wb, ws, "Thống kê ngày");
+
     const vietnamDate = new Date().toLocaleDateString("en-CA", {
         timeZone: "Asia/Ho_Chi_Minh",
     });
     window.XLSX.writeFile(
         wb,
-        `thong-ke-thang-${month}-${year}-${vietnamDate}.xlsx`
+        `thong-ke-ngay-${selectedDate}-${vietnamDate}.xlsx`
+    );
+}
+
+function exportYearlyStats() {
+    const selectedYear = document.getElementById("yearSelector").value;
+    const people = JSON.parse(localStorage.getItem("people"));
+    const lunchPrice = Number.parseInt(localStorage.getItem("lunchPrice"));
+    const dinnerPrice = Number.parseInt(localStorage.getItem("dinnerPrice"));
+
+    const wb = window.XLSX.utils.book_new();
+
+    // Create header
+    const headers = ["STT", "Họ và Tên"];
+    for (let month = 1; month <= 12; month++) {
+        headers.push(`Tháng ${month}`);
+    }
+    headers.push("Tổng", "Thành Tiền");
+
+    const data = [[`Chấm cơm năm ${selectedYear}`], [], headers];
+
+    const personStats = {};
+    people.forEach((person) => {
+        personStats[person] = { months: Array(12).fill(0), cost: 0 };
+    });
+
+    // Calculate data for each month
+    for (let month = 1; month <= 12; month++) {
+        const monthStr = String(month).padStart(2, "0");
+        const daysInMonth = new Date(selectedYear, month, 0).getDate();
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${selectedYear}-${monthStr}-${String(day).padStart(
+                2,
+                "0"
+            )}`;
+
+            const lunchKey = `attendance_${dateStr}_lunch`;
+            const dinnerKey = `attendance_${dateStr}_dinner`;
+            const lunchAttendance = JSON.parse(
+                localStorage.getItem(lunchKey) || "{}"
+            );
+            const dinnerAttendance = JSON.parse(
+                localStorage.getItem(dinnerKey) || "{}"
+            );
+
+            people.forEach((person) => {
+                if (lunchAttendance[person]) {
+                    personStats[person].months[month - 1]++;
+                    personStats[person].cost += lunchPrice;
+                }
+                if (dinnerAttendance[person]) {
+                    personStats[person].months[month - 1]++;
+                    personStats[person].cost += dinnerPrice;
+                }
+            });
+        }
+    }
+
+    // Add person data
+    const monthTotals = Array(12).fill(0);
+    let totalMeals = 0,
+        totalCost = 0;
+
+    people.forEach((person, index) => {
+        const stats = personStats[person];
+        const personTotal = stats.months.reduce((sum, meals) => sum + meals, 0);
+        const row = [
+            index + 1,
+            person,
+            ...stats.months,
+            personTotal,
+            stats.cost,
+        ];
+        data.push(row);
+
+        stats.months.forEach((meals, monthIndex) => {
+            monthTotals[monthIndex] += meals;
+        });
+        totalMeals += personTotal;
+        totalCost += stats.cost;
+    });
+
+    // Add total row
+    const totalRow = ["", "TỔNG CỘNG", ...monthTotals, totalMeals, totalCost];
+    data.push(totalRow);
+
+    const ws = window.XLSX.utils.aoa_to_sheet(data);
+
+    // Format worksheet
+    ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 13 } }];
+
+    // Set column widths
+    const colWidths = [
+        { wch: 5 }, // STT
+        { wch: 20 }, // Họ và Tên
+    ];
+    for (let i = 0; i < 12; i++) {
+        colWidths.push({ wch: 8 }); // Months
+    }
+    colWidths.push({ wch: 8 }); // Tổng
+    colWidths.push({ wch: 15 }); // Thành Tiền
+
+    ws["!cols"] = colWidths;
+
+    window.XLSX.utils.book_append_sheet(wb, ws, "Thống kê năm");
+
+    const vietnamDate = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Ho_Chi_Minh",
+    });
+    window.XLSX.writeFile(
+        wb,
+        `thong-ke-nam-${selectedYear}-${vietnamDate}.xlsx`
     );
 }
 
